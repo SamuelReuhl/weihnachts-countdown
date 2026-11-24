@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#071722">
+  <meta name="description" content="Ein kleiner Weihnachts-Countdown – live bis zum 24. Dezember.">
+  <title>Bis Weihnachten — Countdown</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --text: #f7fbff;
+      --muted: rgba(232, 243, 250, .66);
+      --glass: rgba(255, 255, 255, .075);
+      --edge: rgba(255, 255, 255, .18);
+    }
+    * { box-sizing: border-box; }
+    body {
+      min-height: 100svh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      overflow-x: hidden;
+      overflow-y: auto;
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+      background-color: #0b1118;
+      background-image: linear-gradient(145deg, rgba(8, 13, 18, .18), rgba(9, 14, 20, .22));
+    }
+    .backdrop {
+      position: fixed; inset: -3%; z-index: 0;
+      background: url("weihnachts-hintergrund.png") center / cover no-repeat;
+      transform: scale(1.04);
+    }
+    .snow { position: fixed; inset: 0; z-index: 2; overflow: hidden; pointer-events: none; }
+    .snow i { position:absolute; top:-12px; border-radius:50%; background:rgba(255,255,255,.92); box-shadow:0 0 8px rgba(255,255,255,.55); animation: snowfall linear infinite; }
+    @keyframes snowfall { to { transform: translate3d(var(--drift), 112vh, 0); } }
+    main { width: min(1000px, 100%); position: relative; z-index: 1; text-align: center; }
+    .panel {
+      width: 100%;
+      margin-inline: auto;
+      padding: clamp(38px, 6vw, 80px) clamp(26px, 6vw, 72px);
+      border: 1px solid rgba(255,239,215,.27); border-radius: 32px;
+      background: linear-gradient(135deg, rgba(255,241,238,.035), rgba(255,255,255,.008));
+      box-shadow: 0 30px 90px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.21);
+      backdrop-filter: blur(12px) saturate(145%); -webkit-backdrop-filter: blur(12px) saturate(145%);
+    }
+    .eyebrow, h1, .subtitle, .foot { text-shadow: 0 2px 12px rgba(0,0,0,.68); }
+    .eyebrow { margin: 0 0 18px; color: #d9e8e9; font-size: 12px; font-weight: 650; letter-spacing: .24em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(38px, 8vw, 76px); line-height: 1.02; letter-spacing: -.055em; font-weight: 650; }
+    h1 span { color: #d7e8e5; }
+    .subtitle { margin: 18px 0 42px; color: var(--muted); font-size: clamp(15px, 2.5vw, 18px); }
+    .countdown { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(8px, 2vw, 18px); }
+    .countdown[hidden] { display: none; }
+    .unit { min-width: 0; padding: clamp(16px, 3.2vw, 28px) 6px 20px; border: 1px solid rgba(255,255,255,.13); border-radius: 20px; background: rgba(7,22,32,.24); }
+    .number { display: block; font-variant-numeric: tabular-nums; font-size: clamp(34px, 7vw, 64px); line-height: 1; letter-spacing: -.055em; font-weight: 550; }
+    .label { display: block; margin-top: 12px; color: var(--muted); font-size: clamp(10px, 1.7vw, 13px); letter-spacing: .08em; text-transform: uppercase; }
+    .foot { margin: 30px 0 0; color: rgba(232,243,250,.48); font-size: 12px; }
+    .credit { margin: 9px 0 0; color: rgba(232,243,250,.45); font-size: 10px; }
+    .credit a { color: inherit; }
+    .music-toggle { margin-top: 24px; padding: 11px 18px; color: rgba(255,255,255,.9); font: inherit; font-size: 13px; border: 1px solid rgba(255,255,255,.2); border-radius: 999px; background: rgba(255,255,255,.08); backdrop-filter: blur(12px); cursor: pointer; transition: background .2s, transform .2s; }
+    .music-toggle:hover { background: rgba(255,255,255,.15); transform: translateY(-1px); }
+    .music-toggle:focus-visible { outline: 2px solid #ffe7a0; outline-offset: 3px; }
+    @media (max-width: 760px) {
+      body { padding: 14px; }
+      main, .panel { width: 100%; }
+      .panel { padding: 36px 24px; border-radius: 26px; }
+      .countdown { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .unit { padding: 18px 8px 16px; border-radius: 16px; }
+      .number { font-size: clamp(36px, 10vw, 48px); }
+      .label { margin-top: 9px; font-size: 10px; letter-spacing: .06em; }
+      .subtitle { margin: 14px 0 26px; line-height: 1.45; }
+      .music-toggle { min-height: 44px; padding-inline: 20px; }
+      .foot { margin-top: 22px; }
+    }
+    @media (max-width: 380px) {
+      body { padding: 10px; }
+      .panel { padding: 30px 16px; border-radius: 22px; }
+      .eyebrow { font-size: 10px; letter-spacing: .16em; }
+      h1 { font-size: clamp(34px, 10vw, 40px); }
+      .number { font-size: 36px; }
+      .unit { padding: 16px 5px 14px; }
+    }
+    @media (prefers-reduced-motion: reduce) { .snow { display: none; } *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; } }
+  </style>
+</head>
+<body>
+  <div class="backdrop" aria-hidden="true"></div>
+  <div class="snow" id="snow" aria-hidden="true"></div>
+  <main>
+    <section class="panel" aria-label="Weihnachts-Countdown">
+      <p class="eyebrow">Die schönste Zeit des Jahres</p>
+      <h1 id="headline">Noch ein bisschen<br><span>bis Weihnachten.</span></h1>
+      <p class="subtitle" id="subtitle">Der Countdown läuft bis zum 24. Dezember</p>
+      <div class="countdown" id="countdown" role="timer" aria-live="off" aria-label="Zeit bis Weihnachten"></div>
+      <button class="music-toggle" id="musicToggle" type="button" aria-pressed="false">♫　Musik einschalten</button>
+      <p class="foot">24. Dezember <span aria-hidden="true">·</span> jedes Jahr aufs Neue</p>
+      <audio id="musicA" src="weihnachtsmusik.m4a" preload="none"></audio>
+      <audio id="musicB" src="weihnachtsmusik.m4a" preload="none"></audio>
+    </section>
+  </main>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const countdown = $("countdown");
+    const headline = $("headline");
+    const subtitle = $("subtitle");
+    const snow = $("snow");
+
+    function renderUnits(values) {
+      const labels = [["days", "Tage"], ["hours", "Stunden"], ["minutes", "Minuten"], ["seconds", "Sekunden"]];
+      countdown.replaceChildren(...labels.filter(([key]) => values[key] > 0).map(([key, label]) => {
+        const unit = document.createElement("div");
+        unit.className = "unit";
+        const number = document.createElement("span");
+        number.className = "number";
+        number.textContent = String(values[key]);
+        const caption = document.createElement("span");
+        caption.className = "label";
+        caption.textContent = label;
+        unit.append(number, caption);
+        return unit;
+      }));
+    }
+
+    function updateCountdown() {
+      const now = new Date();
+      const month = now.getMonth();
+      const day = now.getDate();
+      const holidayText = month === 11 && day >= 24 && day <= 26
+        ? ["Heiligabend", "1. Weihnachtsfeiertag", "2. Weihnachtsfeiertag"][day - 24]
+        : null;
+
+      if (holidayText) {
+        headline.innerHTML = "Frohe<br><span>Weihnachten!</span>";
+        subtitle.textContent = holidayText;
+        countdown.hidden = true;
+        return;
+      }
+
+      const year = month === 11 && day > 26 ? now.getFullYear() + 1 : now.getFullYear();
+      const target = new Date(year, 11, 24, 0, 0, 0, 0);
+      headline.innerHTML = "Noch ein bisschen<br><span>bis Weihnachten.</span>";
+      subtitle.textContent = "Der Countdown läuft bis zum 24. Dezember";
+      countdown.hidden = false;
+
+      const totalSeconds = Math.max(0, Math.floor((target - now) / 1000));
+      const wholeDays = Math.floor(totalSeconds / 86400);
+      const remainderDaySeconds = totalSeconds % 86400;
+      renderUnits({
+        days: wholeDays,
+        hours: Math.floor(remainderDaySeconds / 3600),
+        minutes: Math.floor(remainderDaySeconds % 3600 / 60),
+        seconds: remainderDaySeconds % 60
+      });
+    }
+
+    const flakeCount = window.matchMedia("(max-width: 520px)").matches ? 55 : 95;
+    for (let i = 0; i < flakeCount; i++) {
+      const flake = document.createElement("i");
+      const size = 1.5 + Math.random() * 3.5;
+      const duration = 9 + Math.random() * 17;
+      flake.style.left = `${Math.random() * 100}%`;
+      flake.style.top = `${-Math.random() * 100}vh`;
+      flake.style.width = `${size}px`;
+      flake.style.height = `${size}px`;
+      flake.style.opacity = String(0.35 + Math.random() * 0.65);
+      flake.style.animationDuration = `${duration}s`;
+      flake.style.animationDelay = `${-Math.random() * duration}s`;
+      flake.style.setProperty("--drift", `${Math.random() * 100 - 50}px`);
+      snow.append(flake);
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+
+    const musicToggle = $("musicToggle");
+    const players = [$("musicA"), $("musicB")];
+    const musicVolume = 0.38;
+    let activeMusic = players[0];
+    let spareMusic = players[1];
+    let fade = null;
+    let fadeFrame = null;
+    let musicEnabled = false;
+
+    function animateCrossfade(timestamp) {
+      if (!fade || !musicEnabled) return;
+      if (fade.lastFrame !== null) fade.progress += (timestamp - fade.lastFrame) / fade.duration;
+      fade.lastFrame = timestamp;
+      const progress = Math.min(1, fade.progress);
+      fade.from.volume = musicVolume * (1 - progress);
+      fade.to.volume = musicVolume * progress;
+      if (progress >= 1) {
+        fade.from.pause();
+        fade.from.currentTime = 0;
+        activeMusic = fade.to;
+        spareMusic = fade.from;
+        activeMusic.volume = musicVolume;
+        fade = null;
+        fadeFrame = null;
+        return;
+      }
+      fadeFrame = requestAnimationFrame(animateCrossfade);
+    }
+
+    function beginCrossfade() {
+      if (fade || !musicEnabled || activeMusic.paused) return;
+      fade = { from: activeMusic, to: spareMusic, progress: 0, duration: 2200, lastFrame: null };
+      spareMusic.currentTime = 0;
+      spareMusic.volume = 0;
+      spareMusic.play().then(() => {
+        if (musicEnabled && fade) fadeFrame = requestAnimationFrame(animateCrossfade);
+      }).catch(() => {});
+    }
+
+    players.forEach((player) => player.addEventListener("timeupdate", () => {
+      if (player === activeMusic && Number.isFinite(player.duration) && player.duration - player.currentTime <= 2.5) beginCrossfade();
+    }));
+
+    musicToggle.addEventListener("click", async () => {
+      if (musicEnabled) {
+        musicEnabled = false;
+        players.forEach((player) => player.pause());
+        if (fadeFrame !== null) cancelAnimationFrame(fadeFrame);
+        fadeFrame = null;
+        if (fade) fade.lastFrame = null;
+        musicToggle.textContent = "♫　Musik einschalten";
+        musicToggle.setAttribute("aria-pressed", "false");
+        return;
+      }
+      try {
+        musicEnabled = true;
+        activeMusic.volume = fade ? musicVolume * (1 - fade.progress) : musicVolume;
+        await activeMusic.play();
+        if (fade) {
+          fade.to.volume = musicVolume * fade.progress;
+          await fade.to.play();
+          fade.lastFrame = null;
+          fadeFrame = requestAnimationFrame(animateCrossfade);
+        }
+        musicToggle.textContent = "♫　Musik ausschalten";
+        musicToggle.setAttribute("aria-pressed", "true");
+      } catch {
+        musicEnabled = false;
+        musicToggle.textContent = "Musik konnte nicht geladen werden";
+      }
+    });
+  </script>
+</body>
+</html>
